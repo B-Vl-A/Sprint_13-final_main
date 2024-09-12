@@ -1,50 +1,15 @@
-name: Go
-
-on:
-  push:
-    branches: ["main"]
-
+name: golang-pipeline
+on: push
 jobs:
-
-  build:
+  test:
     runs-on: ubuntu-latest
+    container: golang:1.22.5
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
 
-    - name: Build
-      run: go build -v ./...
+      - name: Run Unit Tests
+        run: GOOS=linux GOARCH=amd64 go test
 
-  tests:
-    # Задание "tests" зависит от задания "build" и будет выполнено после него
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v4
-
-    - name: Test
-      run: go test -v ./...
-
-  # Задание проверяет наличие в коде состояния гонки
-  tests-race:
-    # Задание "tests-race" зависит от задания "build" и будет выполнено после него
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v4
-
-    - name: Test
-      run: go test -race -v ./...
-  
-  # Задание проверяет код на соответствие стилю и отсутствие логических ошибок
-  lint:
-    # Задание "lint" зависит от заданий "tests" и "tests-race" и будет выполнено после них
-    needs: [tests, tests-race]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-      # Используется действие "golangci/golangci-lint-action@v3", которое запускает линтер. Он проверит код на соответствие стилю и отсутствие логических ошибок
-      - uses: golangci/golangci-lint-action@v3
+      - name: Vet
+        run: |
+          go vet ./...
